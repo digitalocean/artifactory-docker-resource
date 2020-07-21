@@ -112,6 +112,11 @@ func (v *Version) Image() string {
 	return fmt.Sprintf("%s/%s:%s", v.Owner, v.Name, v.Tag)
 }
 
+// ArtifactoryPath builds the internal path for an manifest based on the version
+func (v *Version) ArtifactoryPath() string {
+	return fmt.Sprintf("%s/%s/%s/manifest.json", v.Repo, v.Owner, v.Name, v.Tag)
+}
+
 // Empty returns true if the version is empty
 func (v *Version) Empty() bool {
 	if v.Repo == "" || v.Owner == "" || v.Name == "" || v.Tag == "" {
@@ -147,6 +152,8 @@ func (r CheckResponse) Write() error {
 
 // GetParameters is the configuration for a resource step
 type GetParameters struct {
+	SkipDownload bool `json:"skip_download"` // SkipDownload is used with `put` steps to skip `get` step that Concourse runs by default
+	//RootFS       bool `json:"root_fs"`       // RootFS
 }
 
 // GetRequest is the data struct received from Concoruse by the resource get operation

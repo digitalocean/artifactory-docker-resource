@@ -1,6 +1,14 @@
 package resource
 
-import "log"
+import (
+	"log"
+	"path/filepath"
+
+	"github.com/digitalocean/concourse-resource-library/artifactory"
+	"github.com/digitalocean/concourse-resource-library/docker"
+	rlog "github.com/digitalocean/concourse-resource-library/log"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+)
 
 // Get performs the get operation for the resource
 func Get(req GetRequest, dir string) (GetResponse, error) {
@@ -24,11 +32,41 @@ func Get(req GetRequest, dir string) (GetResponse, error) {
 		return res, err
 	}
 
-	// write metadata to file for parsing
+	log.Println("pulled image:", req.Version.Image())
 
-	// optionally save image to disk via `docker save`
+	item, err := c.SearchItem(req.Version.ArtifactoryPath())
+	if err != nil {
+		rlog.StdErr("failed to search", err)
+		log.Println(err)
+		return res, err
+	}
 
-	// optionally mount as rootfs for task steps
+	log.Println("fetched metadata:", item)
+
+	res.Metadata = metadata(
+		artifactory.Artifact{
+			File: utils.FileInfo{ArtifactoryPath: req.Version.ArtifactoryPath()},
+			Item: item,
+		})
+
+	d, err := docker.NewClient()
+	img, err := d.Image(req.Version.Image())
+	if err != nil {
+		rlog.StdErr("failed to get image details", err)
+		log.Println(err)
+		return res, err
+	}
+
+	if !req.Params.SkipDownload {
+		err = d.Save(filepath.Join(dir, "image.tar"), img.ID)
+		if err != nil {
+			rlog.StdErr("failed to save image to disk", err)
+			log.Println(err)
+			return res, err
+		}
+	}
+
+	// TODO: mount as rootfs for task steps
 
 	return res, nil
 }
