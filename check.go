@@ -2,7 +2,6 @@ package resource
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
@@ -16,11 +15,11 @@ func Check(req CheckRequest) (CheckResponse, error) {
 		return nil, err
 	}
 
-	req.Source.Image.SetModifiedTime(req.Version)
+	req.Source.AQL.SetModifiedTime(req.Version)
 
-	log.Println("query:", req.Source.Image.Raw)
+	log.Println("query:", req.Source.AQL.Raw)
 
-	data, err := c.SearchItems(req.Source.Image.Raw)
+	data, err := c.SearchItems(req.Source.AQL.Raw)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -63,19 +62,19 @@ func processItem(i utils.ResultItem) (Version, error) {
 		return v, err
 	}
 
-	var owner, name, tag string
+	var image, tag, digest string
 	for _, prop := range i.Properties {
 		switch prop.Key {
 		case "docker.repoName":
-			v := strings.Split(prop.Value, "/")
-			owner = v[0]
-			name = v[1]
+			image = prop.Value
 		case "docker.manifest":
 			tag = prop.Value
+		case "docker.manifest.digest":
+			digest = prop.Value
 		}
 	}
 
-	v = Version{Repo: i.Repo, Owner: owner, Name: name, Tag: tag, Modified: m}
+	v = Version{Repo: i.Repo, Image: image, Tag: tag, Digest: digest, Modified: m}
 
 	return v, nil
 }

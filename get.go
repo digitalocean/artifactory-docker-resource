@@ -2,10 +2,8 @@ package resource
 
 import (
 	"log"
-	"path/filepath"
 
 	"github.com/digitalocean/concourse-resource-library/artifactory"
-	"github.com/digitalocean/concourse-resource-library/docker"
 	rlog "github.com/digitalocean/concourse-resource-library/log"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 )
@@ -15,6 +13,7 @@ func Get(req GetRequest, dir string) (GetResponse, error) {
 	var res GetResponse
 
 	if req.Version.Empty() {
+		log.Println("request version is empty")
 		return res, nil
 	}
 
@@ -26,14 +25,6 @@ func Get(req GetRequest, dir string) (GetResponse, error) {
 
 	log.Println(dir)
 
-	err = c.PullImage(req.Version.Repo, req.Version.Image())
-	if err != nil {
-		log.Println(err)
-		return res, err
-	}
-
-	log.Println("pulled image:", req.Version.Image())
-
 	item, err := c.SearchItem(req.Version.ArtifactoryPath())
 	if err != nil {
 		rlog.StdErr("failed to search", err)
@@ -41,32 +32,28 @@ func Get(req GetRequest, dir string) (GetResponse, error) {
 		return res, err
 	}
 
+	res = GetResponse{
+		Version: req.Version,
+		Metadata: metadata(
+			artifactory.Artifact{
+				File: utils.FileInfo{ArtifactoryPath: req.Version.ArtifactoryPath()},
+				Item: item,
+			}),
+	}
+
 	log.Println("fetched metadata:", item)
 
-	res.Metadata = metadata(
-		artifactory.Artifact{
-			File: utils.FileInfo{ArtifactoryPath: req.Version.ArtifactoryPath()},
-			Item: item,
-		})
+	if req.Params.SkipDownload {
+		return res, nil
+	}
 
-	d, err := docker.NewClient()
-	img, err := d.Image(req.Version.Image())
+	err = c.PullImage(dir, req.Params.Format, req.OCIRepository(), req.Version.Tag, req.Version.Digest)
 	if err != nil {
-		rlog.StdErr("failed to get image details", err)
 		log.Println(err)
 		return res, err
 	}
 
-	if !req.Params.SkipDownload {
-		err = d.Save(filepath.Join(dir, "image.tar"), img.ID)
-		if err != nil {
-			rlog.StdErr("failed to save image to disk", err)
-			log.Println(err)
-			return res, err
-		}
-	}
-
-	// TODO: mount as rootfs for task steps
+	log.Println("pulled image:", req.Version.ImageTag())
 
 	return res, nil
 }

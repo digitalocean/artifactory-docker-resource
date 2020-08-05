@@ -2,7 +2,7 @@ mkfile := $(abspath $(lastword $(MAKEFILE_LIST)))
 dir := $(dir $(mkfile))
 
 BUILD_DIR := build
-DOCKER_REPO :=
+DOCKER_REPO := digitalocean/artifactory-docker-resource
 BINARY := check
 EXTENSION :=
 

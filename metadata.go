@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"encoding/json"
 	"strconv"
 
 	"github.com/digitalocean/concourse-resource-library/artifactory"
@@ -20,8 +19,7 @@ func metadata(a artifactory.Artifact) meta.Metadata {
 	m.Add("size", strconv.FormatInt(a.Item.Size, 10))
 	m.Add("type", a.Item.Type)
 
-	props, _ := json.Marshal(a.Item.Properties)
-	m.AddJSON("properties", string(props))
+	m.AddJSON("properties", a.Item.Properties)
 
 	return m
 }
