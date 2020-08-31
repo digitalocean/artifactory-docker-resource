@@ -4,7 +4,7 @@ Concourse resource for triggering, getting and putting new versions of docker / 
 
 ## Config
 
-Complete source configuration details can be found in the `resource.go` file for the `Source` struct.
+Complete source configuration details can be viewed in GoDoc on the [Source struct](https://godoc.org/github.com/digitalocean/artifactory-docker-resource#Source)
 
 ## Check
 
@@ -14,11 +14,11 @@ performant.
 
 ## Get
 
-Get will download a compressed container image to the input directory defined along with metadata for the artifact.
+Get will download a compressed container image to the input directory defined along with metadata for the artifact. View GoDoc for [GetParameter options](https://godoc.org/github.com/digitalocean/artifactory-docker-resource#GetParameters)
 
 ## Put
 
-Put supports publishing 1 compressed container image (output of `docker save`) using glob style patterns to locate the artifact to publish.
+Put supports publishing 1 compressed container image (output of `docker save`) using glob style patterns to locate the artifact to publish. View GoDoc for [PutParameter options](https://godoc.org/github.com/digitalocean/artifactory-docker-resource#PutParameters)
 
 ## Examples
 
