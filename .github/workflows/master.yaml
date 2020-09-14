@@ -1,0 +1,34 @@
+on:
+  push:
+    branches:
+    - master
+name: build
+jobs:
+  go-test:
+    name: Go Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14'
+    - name: go lint
+      run: |
+        go get -u golang.org/x/lint/golint
+        golint ./...
+    - name: go test
+      run: go test -v -cover ./...
+  build-push:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Build and push Docker images
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USER }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+        repository: digitalocean/artifactory-docker-resource
+        tags: latest
+        tag_with_ref: true
+        tag_with_sha: true

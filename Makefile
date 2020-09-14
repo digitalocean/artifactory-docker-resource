@@ -30,3 +30,7 @@ build: test
 .PHONY: go-build
 go-build:
 	@CGO_ENABLED=0 GOOS=${OS} GOOS=${ARCH} go build -o $(BUILD_DIR)/$(BINARY)$(EXTENSION) -ldflags="-s -w" -v cmd/$(BINARY)/main.go
+
+.PHONY: docker-push
+docker-push:
+	@docker push $(DOCKER_REPO):dev
